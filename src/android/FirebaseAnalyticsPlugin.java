@@ -10,13 +10,11 @@ import by.chemerisuk.cordova.support.ReflectiveCordovaPlugin;
 import com.google.firebase.analytics.FirebaseAnalytics;
 
 import org.apache.cordova.CallbackContext;
-import org.apache.cordova.CordovaArgs;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.Iterator;
+
 
 public class FirebaseAnalyticsPlugin extends ReflectiveCordovaPlugin {
     private static final String TAG = "FirebaseAnalyticsPlugin";
@@ -26,59 +24,60 @@ public class FirebaseAnalyticsPlugin extends ReflectiveCordovaPlugin {
     @Override
     protected void pluginInitialize() {
         Log.d(TAG, "Starting Firebase Analytics plugin");
+
         Context context = this.cordova.getActivity().getApplicationContext();
-        firebaseAnalytics = FirebaseAnalytics.getInstance(context);
+
+        this.firebaseAnalytics = FirebaseAnalytics.getInstance(context);
     }
 
     @CordovaMethod
-    private void logEvent(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
-        String name = args.getString(0);
-        JSONObject params = args.getJSONObject(1);
-        firebaseAnalytics.logEvent(name, parse(params));
+    private void logEvent(String name, JSONObject params, CallbackContext callbackContext) throws JSONException {
+        this.firebaseAnalytics.logEvent(name, parse(params));
+
         callbackContext.success();
     }
 
     @CordovaMethod
-    private void setUserId(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
-        String userId = args.getString(0);
-        firebaseAnalytics.setUserId(userId);
+    private void setUserId(String userId, CallbackContext callbackContext) {
+        this.firebaseAnalytics.setUserId(userId);
+
         callbackContext.success();
     }
 
     @CordovaMethod
-    private void setUserProperty(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
-        String name = args.getString(0);
-        String value = args.getString(1);
-        firebaseAnalytics.setUserProperty(name, value);
+    private void setUserProperty(String name, String value, CallbackContext callbackContext) {
+        this.firebaseAnalytics.setUserProperty(name, value);
+
         callbackContext.success();
     }
 
     @CordovaMethod
-    private void resetAnalyticsData(CordovaArgs args, CallbackContext callbackContext) {
-        firebaseAnalytics.resetAnalyticsData();
+    private void resetAnalyticsData(CallbackContext callbackContext) {
+        this.firebaseAnalytics.resetAnalyticsData();
+
         callbackContext.success();
     }
 
     @CordovaMethod
-    private void setEnabled(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
-        boolean enabled = args.getBoolean(0);
-        firebaseAnalytics.setAnalyticsCollectionEnabled(enabled);
+    private void setEnabled(boolean enabled, CallbackContext callbackContext) {
+        this.firebaseAnalytics.setAnalyticsCollectionEnabled(enabled);
+
         callbackContext.success();
     }
 
     @CordovaMethod
-    private void setCurrentScreen(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
-        String screenName = args.getString(0);
+    private void setCurrentScreen(String screenName, CallbackContext callbackContext) {
         Bundle bundle = new Bundle();
         bundle.putString(FirebaseAnalytics.Param.SCREEN_NAME, screenName);
         firebaseAnalytics.logEvent(FirebaseAnalytics.Event.SCREEN_VIEW, bundle);
+
         callbackContext.success();
     }
 
     @CordovaMethod
-    private void setDefaultEventParameters(CordovaArgs args, CallbackContext callbackContext) throws JSONException {
-        JSONObject params = args.getJSONObject(0);
-        firebaseAnalytics.setDefaultEventParameters(parse(params));
+    private void setDefaultEventParameters(JSONObject params, CallbackContext callbackContext) throws JSONException {
+        this.firebaseAnalytics.setDefaultEventParameters(parse(params));
+
         callbackContext.success();
     }
 
@@ -98,15 +97,8 @@ public class FirebaseAnalyticsPlugin extends ReflectiveCordovaPlugin {
                 bundle.putDouble(key, (Double)value);
             } else if (value instanceof Long) {
                 bundle.putLong(key, (Long)value);
-            } else if (value instanceof JSONArray) {
-                JSONArray jsonArray = (JSONArray)value;
-                ArrayList<Bundle> items = new ArrayList<>();
-                for (int i = 0, n = jsonArray.length(); i < n; i++) {
-                    items.add(parse(jsonArray.getJSONObject(i)));
-                }
-                bundle.putParcelableArrayList(key, items);
             } else {
-                Log.w(TAG, "Value for key " + key + " is not supported");
+                Log.w(TAG, "Value for key " + key + " not one of (String, Integer, Double, Long)");
             }
         }
 
